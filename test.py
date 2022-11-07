@@ -10,8 +10,4 @@ import trainingset_generation
 from minigrid.utils import window
 window = window.Window('whateevr')
 env = trainingset_generation.Frame()
-env._gen_grid()
-img = env.render()
-window.show_img(img)
-window.show()
-
+img = env.render_frame_series()
