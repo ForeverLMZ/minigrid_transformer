@@ -9,7 +9,9 @@ from minigrid.core.world_object import Wall, WorldObj
 import numpy as np
 import random
 import math
-
+from minigrid.utils import window as w
+from random import sample as s
+import numpy as np
 
 class Frame(MiniGridEnv):
     """
@@ -36,30 +38,39 @@ class Frame(MiniGridEnv):
     def _gen_grid(self, width = 4, height = 4):
         # Create the grid
         self.grid = Grid(width, height)
-
-        # # Place random objects in the world
-        # types = ["key", "ball", "box"]
-        # for i in range(0, 12):
-        #     objType = self._rand_elem(types)
-        #     objColor = self._rand_elem(COLOR_NAMES)
-        #     if objType == "key":
-        #         obj = Key(objColor)
-        #     elif objType == "ball":
-        #         obj = Ball(objColor)
-        #     elif objType == "box":
-        #         obj = Box(objColor)
-        #     else:
-        #         raise ValueError(
-        #             "{} object type given. Object type can only be of values key, ball and box.".format(
-        #                 objType
-        #             )
-        #         )
-        #     self.place_obj(obj)
-
         # No explicit mission in this environment
         self.mission = ""
 
-    def render(self, tile_size = 60, objects = None, stage = 'cue') -> np.ndarray:
+
+    def render_frame_series(self):#(240,240,3)
+        series = []
+        cue = self.render_frame(stage = 'cue')
+        delay = self.render_frame(stage = 'delay')
+        test = self.render_frame(stage = 'test')
+        self.delay_fram_number = random.randint(1,5)
+        series.append(cue)
+        for frame in range(self.delay_fram_number):
+            series.append(delay)
+        series.append(test)
+        series_arr = np.asarray(series)
+        print(self.delay_fram_number)
+        print(series_arr.shape) #(3, 240, 240, 3)
+        # print(cue.shape)
+        # window = w.Window('whateevr') 
+        # window.show_img(cue)
+        # window.show()
+        # #window.close()
+        # window = w.Window('whateevr')
+        # window.show_img(delay)
+        # window.show()
+        # window.close()
+        # window = w.Window('whateevr')
+        # window.show_img(test)
+        # window.show()
+        # window.close()
+        
+
+    def render_frame(self, tile_size = 60, objects = None, stage = 'cue') -> np.ndarray:
         """
         Render this grid at a given scale
         :param r: target renderer object
@@ -77,15 +88,17 @@ class Frame(MiniGridEnv):
         # Render the grid
         subdivs = 3
         if stage == 'cue':
-            self.actual_coord = (random.randint(0,3), random.randint(0,3))
-            self.actual_shape = self.random_shape()
-        elif stage == 'test':
+            self.cue_coord = (random.randint(0,3), random.randint(0,3))
+            self.false_test_shape, self.cue_shape = s(['square','circle','triangle'], 2)
+        elif stage == 'test':   
+            self.false_test_coord = (random.randint(0,3), random.randint(0,3))
+            # self.false_test_shape = self.random_shape()
+            self.true_test_coord = (random.randint(0,3), random.randint(0,3))
+            # self.true_test_shape = self.cue_shape
+            while (self.false_test_coord == self.true_test_coord): #generates a different coord than the actual coord of the cue
                 self.false_coord = (random.randint(0,3), random.randint(0,3))
-                self.false_shape = self.random_shape()
-                while (self.false_coord == self.actual_coord): #generates a different coord than the actual coord of the cue
-                    self.false_coord = (random.randint(0,3), random.randint(0,3))
-                while(self.actual_shape == self.false_shape):
-                    self.false_shape = self.random_shape()
+            # while(self.true_test_shape == self.false_test_shape):
+            #     self.false_shape = self.random_shape()
 
         
 
@@ -95,10 +108,15 @@ class Frame(MiniGridEnv):
                 tile_img = np.zeros(shape=(tile_size * subdivs, tile_size * subdivs, 3), dtype=np.uint8)
                 #colors each tile white
                 rendering.fill_coords(tile_img, rendering.point_in_rect(0, tile_size, 0, tile_size), (255, 255, 255))
-                if stage == 'cue' and self.actual_coord == (i,j):
-                    self.render_shape(self.actual_shape, self.actual_coord,tile_img)
-                if stage == 'test' and self.false_coord == (i,j):
-                    self.render_shape(self.false_shape, self.false_coord,tile_img)
+                if stage == 'cue' and self.cue_coord == (i,j):
+                    self.render_shape(self.cue_shape, tile_img)
+                if stage == 'test':
+                    if self.false_test_coord == (i,j):
+                        self.render_shape(self.false_test_shape,tile_img)
+                    if self.true_test_coord == (i,j):
+                        self.render_shape(self.cue_shape,tile_img)
+                
+                    
 
                     
                 # Draw the grid lines (top and left edges)
@@ -152,7 +170,7 @@ class Frame(MiniGridEnv):
         shape_key = random.randint(0,2)
         return shape_list[shape_key]
     
-    def render_shape(self,shape,coord,img):
+    def render_shape(self,shape,img):
         if shape == 'square':
             width = random.uniform(0.4, 0.8) #assume a reasonable range of width
             xmin = random.uniform(0.05,(1-width-0.07))
@@ -174,6 +192,3 @@ class Frame(MiniGridEnv):
             centery = random.uniform(radius+0.07,(1-radius-0.07))
             #print(centerx, centery,radius)
             rendering.fill_coords(img, rendering.point_in_circle(cx=centerx, cy=centery, r=radius), self.random_color())
-
-
-
