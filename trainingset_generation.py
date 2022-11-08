@@ -14,10 +14,6 @@ from random import sample as s
 import numpy as np
 
 class Frame(MiniGridEnv):
-    """
-    Environment with multiple rooms and random objects.
-    This environment has no specific goals or rewards.
-    """
 
     def __init__(self, max_steps=100, **kwargs):
         mission_space = MissionSpace(mission_func=self._gen_mission)
@@ -53,21 +49,9 @@ class Frame(MiniGridEnv):
             series.append(delay)
         series.append(test)
         series_arr = np.asarray(series)
+        return series_arr,self.cue_coord
         print(self.delay_fram_number)
         print(series_arr.shape) #(3, 240, 240, 3)
-        # print(cue.shape)
-        # window = w.Window('whateevr') 
-        # window.show_img(cue)
-        # window.show()
-        # #window.close()
-        # window = w.Window('whateevr')
-        # window.show_img(delay)
-        # window.show()
-        # window.close()
-        # window = w.Window('whateevr')
-        # window.show_img(test)
-        # window.show()
-        # window.close()
         
 
     def render_frame(self, tile_size = 60, objects = None, stage = 'cue') -> np.ndarray:
